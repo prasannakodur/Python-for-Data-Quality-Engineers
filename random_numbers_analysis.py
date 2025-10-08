@@ -2,8 +2,6 @@
 """
 Random Numbers Analysis Script
 This script generates random numbers, sorts them manually, and calculates averages for even and odd numbers.
-Author: Data Quality Engineer
-Date: October 8, 2025
 """
 
 # Import the random module to generate random numbers
