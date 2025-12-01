@@ -22,6 +22,20 @@ Generate CSV files from current feed content:
 python csv_parsing/csv_parser.py
 ```
 
+### Process JSON and Generate CSVs
+Integrated workflow for JSON record processing + CSV generation:
+
+```powershell
+# Process JSON files from tool/inbox and generate CSVs
+python csv_parsing/csv_parser.py --process-json
+
+# Process JSON files from tool_pro/inbox and generate CSVs
+python csv_parsing/csv_parser.py --process-json --use-tool-pro
+
+# Process specific JSON file and generate CSVs
+python csv_parsing/csv_parser.py --process-json --json-file path/to/records.json
+```
+
 ### Monitor Mode
 Automatically regenerate CSVs when feed files are updated:
 ```powershell
@@ -41,6 +55,7 @@ python csv_parsing/feed_monitor.py --watch --interval 5
 - **Real-time Updates**: Monitor mode detects file changes and regenerates CSVs automatically
 - **Comprehensive Analysis**: Processes content from both `tool` and `tool_pro` feed files
 - **Robust Parsing**: Handles various record types (NEWS, PRIVATE AD, RECIPE) uniformly
+- **JSON Integration**: Process JSON files and automatically update CSVs in one command
 
 ## File Structure
 ```

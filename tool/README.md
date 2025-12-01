@@ -43,18 +43,57 @@ Each record is appended at the end of `tool/feed.txt` (or a custom path via `--f
 - `feed_tool.py` orchestrates input capture and appends using `append_record`.
 
 ## Usage
-Interactive mode:
+
+### Interactive Mode
 ```powershell
 python tool/feed_tool.py
 ```
-Demo mode (append sample records):
+
+### Demo Mode (append sample records)
 ```powershell
 python tool/feed_tool.py --demo
 ```
-Custom feed file path:
+
+### Custom Feed File Path
 ```powershell
 python tool/feed_tool.py --file custom_feed.txt --demo
 ```
+
+### JSON File Processing (New!)
+Process JSON files containing one or many records:
+
+```powershell
+# Process all JSON files in inbox/
+python tool/json_processor.py
+
+# Process specific JSON file
+python tool/json_processor.py --file path/to/records.json
+
+# Custom paths
+python tool/json_processor.py --inbox custom/inbox --feed custom/feed.txt
+```
+
+**JSON Format Examples:**
+
+Single record:
+```json
+{
+    "type": "news",
+    "text": "Breaking news",
+    "city": "New York"
+}
+```
+
+Multiple records:
+```json
+[
+    {"type": "news", "text": "Story 1", "city": "Tokyo"},
+    {"type": "privatead", "text": "Ad text", "expiration": "2025-12-31"},
+    {"type": "recipe", "title": "Dish Name", "ingredients": "ing1, ing2, ing3"}
+]
+```
+
+See `JSON_PROCESSING_GUIDE.md` for comprehensive documentation.
 
 ## Error Handling
 - Invalid date format raises an exception; record not appended.

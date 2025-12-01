@@ -140,11 +140,77 @@ class FeedCSVParser:
                 times[feed_file] = 0
         return times
 
-def main():
-    """Main function to generate CSV files."""
+def process_json_and_generate_csvs(json_file_path: Path = None, use_tool_pro: bool = False):
+    """Process JSON file(s) and automatically generate updated CSVs.
+    
+    Args:
+        json_file_path: Optional specific JSON file to process
+        use_tool_pro: If True, use tool_pro processor, otherwise use tool processor
+    """
+    import sys
     workspace_root = Path(__file__).parent.parent
+    
+    # Add parent to path for imports
+    if str(workspace_root) not in sys.path:
+        sys.path.insert(0, str(workspace_root))
+    
+    # Process JSON files
+    if use_tool_pro:
+        from tool_pro.json_processor_pro import JSONRecordProcessorPro
+        json_processor = JSONRecordProcessorPro()
+        print("🔄 Processing JSON files with tool_pro...")
+        if json_file_path:
+            json_processor.process_file(json_file_path)
+        else:
+            json_processor.process_inbox()
+    else:
+        from tool.json_processor import JSONRecordProcessor
+        json_processor = JSONRecordProcessor()
+        print("🔄 Processing JSON files with tool...")
+        if json_file_path:
+            json_processor.process_file(json_file_path)
+        else:
+            json_processor.process_inbox()
+    
+    # Generate updated CSVs
+    print("\n📊 Generating updated CSV files...")
     parser = FeedCSVParser(workspace_root)
     parser.generate_all_csvs()
+
+
+def main():
+    """Main function to generate CSV files."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(
+        description="Generate CSV statistics from feed files"
+    )
+    parser.add_argument(
+        '--process-json',
+        action='store_true',
+        help="Process JSON files before generating CSVs"
+    )
+    parser.add_argument(
+        '--json-file',
+        type=Path,
+        help="Specific JSON file to process"
+    )
+    parser.add_argument(
+        '--use-tool-pro',
+        action='store_true',
+        help="Use tool_pro JSON processor instead of tool"
+    )
+    
+    args = parser.parse_args()
+    
+    workspace_root = Path(__file__).parent.parent
+    csv_parser = FeedCSVParser(workspace_root)
+    
+    if args.process_json:
+        process_json_and_generate_csvs(args.json_file, args.use_tool_pro)
+    else:
+        csv_parser.generate_all_csvs()
+
 
 if __name__ == "__main__":
     main()
