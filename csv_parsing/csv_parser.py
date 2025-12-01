@@ -178,6 +178,44 @@ def process_json_and_generate_csvs(json_file_path: Path = None, use_tool_pro: bo
     parser.generate_all_csvs()
 
 
+def process_xml_and_generate_csvs(xml_file_path: Path = None, use_tool_pro: bool = False):
+    """Process XML file(s) and automatically generate updated CSVs.
+    
+    Args:
+        xml_file_path: Optional specific XML file to process
+        use_tool_pro: If True, use tool_pro processor, otherwise use tool processor
+    """
+    import sys
+    workspace_root = Path(__file__).parent.parent
+    
+    # Add parent to path for imports
+    if str(workspace_root) not in sys.path:
+        sys.path.insert(0, str(workspace_root))
+    
+    # Process XML files
+    if use_tool_pro:
+        from tool_pro.xml_processor_pro import XMLRecordProcessorPro
+        xml_processor = XMLRecordProcessorPro()
+        print("🔄 Processing XML files with tool_pro...")
+        if xml_file_path:
+            xml_processor.process_file(xml_file_path)
+        else:
+            xml_processor.process_inbox()
+    else:
+        from tool.xml_processor import XMLRecordProcessor
+        xml_processor = XMLRecordProcessor()
+        print("🔄 Processing XML files with tool...")
+        if xml_file_path:
+            xml_processor.process_file(xml_file_path)
+        else:
+            xml_processor.process_inbox()
+    
+    # Generate updated CSVs
+    print("\n📊 Generating updated CSV files...")
+    parser = FeedCSVParser(workspace_root)
+    parser.generate_all_csvs()
+
+
 def main():
     """Main function to generate CSV files."""
     import argparse
@@ -196,6 +234,16 @@ def main():
         help="Specific JSON file to process"
     )
     parser.add_argument(
+        '--process-xml',
+        action='store_true',
+        help="Process XML files before generating CSVs"
+    )
+    parser.add_argument(
+        '--xml-file',
+        type=Path,
+        help="Specific XML file to process"
+    )
+    parser.add_argument(
         '--use-tool-pro',
         action='store_true',
         help="Use tool_pro JSON processor instead of tool"
@@ -208,6 +256,8 @@ def main():
     
     if args.process_json:
         process_json_and_generate_csvs(args.json_file, args.use_tool_pro)
+    elif args.process_xml:
+        process_xml_and_generate_csvs(args.xml_file, args.use_tool_pro)
     else:
         csv_parser.generate_all_csvs()
 

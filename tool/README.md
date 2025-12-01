@@ -59,7 +59,7 @@ python tool/feed_tool.py --demo
 python tool/feed_tool.py --file custom_feed.txt --demo
 ```
 
-### JSON File Processing (New!)
+### JSON File Processing
 Process JSON files containing one or many records:
 
 ```powershell
@@ -93,7 +93,46 @@ Multiple records:
 ]
 ```
 
-See `JSON_PROCESSING_GUIDE.md` for comprehensive documentation.
+### XML File Processing
+Process XML files containing one or many records:
+
+```powershell
+# Process all XML files in inbox/
+python tool/xml_processor.py
+
+# Process specific XML file
+python tool/xml_processor.py --file path/to/records.xml
+
+# Custom paths
+python tool/xml_processor.py --inbox custom/inbox --feed custom/feed.txt
+```
+
+**XML Format Examples:**
+
+Single record:
+```xml
+<record>
+    <type>news</type>
+    <text>Breaking news</text>
+    <city>New York</city>
+</record>
+```
+
+Multiple records:
+```xml
+<records>
+    <record>
+        <type>news</type>
+        <text>Story 1</text>
+        <city>Tokyo</city>
+    </record>
+    <record>
+        <type>privatead</type>
+        <text>Ad text</text>
+        <expiration>2025-12-31</expiration>
+    </record>
+</records>
+```
 
 ## Error Handling
 - Invalid date format raises an exception; record not appended.
