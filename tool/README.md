@@ -69,8 +69,11 @@ python tool/json_processor.py
 # Process specific JSON file
 python tool/json_processor.py --file path/to/records.json
 
+# Process and save to database (with duplicate detection)
+python tool/json_processor.py --save-to-db
+
 # Custom paths
-python tool/json_processor.py --inbox custom/inbox --feed custom/feed.txt
+python tool/json_processor.py --inbox custom/inbox --feed custom/feed.txt --save-to-db
 ```
 
 **JSON Format Examples:**

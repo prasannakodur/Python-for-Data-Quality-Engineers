@@ -63,20 +63,30 @@ class JSONRecordProcessor:
     # Default inbox folder relative to tool directory
     DEFAULT_INBOX = "inbox"
     
-    def __init__(self, feed_path: Optional[Path] = None, inbox_dir: Optional[Path] = None):
+    def __init__(self, feed_path: Optional[Path] = None, inbox_dir: Optional[Path] = None, 
+                 save_to_db: bool = False, db_path: Optional[Path] = None):
         """Initialize processor with optional custom paths.
         
         Args:
             feed_path: Optional custom path for feed file (defaults to tool/feed.txt)
             inbox_dir: Optional custom inbox directory (defaults to tool/inbox)
+            save_to_db: If True, save records to database
+            db_path: Optional custom database path
         """
         tool_dir = Path(__file__).parent
         self.feed_path = feed_path or (tool_dir / "feed.txt")
         self.inbox_dir = inbox_dir or (tool_dir / self.DEFAULT_INBOX)
+        self.save_to_db = save_to_db
         
         # Ensure directories exist
         self.feed_path.parent.mkdir(parents=True, exist_ok=True)
         self.inbox_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Initialize database if needed
+        self.db_manager = None
+        if save_to_db:
+            from database_manager import FeedDatabaseManager
+            self.db_manager = FeedDatabaseManager(db_path)
     
     def validate_record(self, record: Dict[str, Any]) -> tuple[bool, str]:
         """Validate a single record has required fields.
@@ -122,21 +132,47 @@ class JSONRecordProcessor:
         
         try:
             record_type = record["type"].lower()
+            formatted_record = None
             
             if record_type == "news":
-                return create_news(record["text"], record["city"])
+                formatted_record = create_news(record["text"], record["city"])
+                # Save to database if enabled
+                if self.db_manager:
+                    success, msg = self.db_manager.save_news(record["text"], record["city"])
+                    print(f"    DB: {msg}")
             
             elif record_type in ("privatead", "ad"):
-                return create_private_ad(record["text"], record["expiration"])
+                formatted_record = create_private_ad(record["text"], record["expiration"])
+                # Save to database if enabled
+                if self.db_manager:
+                    success, msg = self.db_manager.save_private_ad(record["text"], record["expiration"])
+                    print(f"    DB: {msg}")
             
             elif record_type == "recipe":
-                return create_recipe(record["title"], record["ingredients"])
+                formatted_record = create_recipe(record["title"], record["ingredients"])
+                # Save to database if enabled
+                if self.db_manager:
+                    # Parse ingredients to get count and complexity
+                    import re
+                    ingredients_list = [i.strip() for i in re.split(r'[,;]', record["ingredients"]) if i.strip()]
+                    ingredient_count = len(ingredients_list)
+                    if ingredient_count <= 4:
+                        complexity = "SIMPLE"
+                    elif ingredient_count <= 8:
+                        complexity = "MODERATE"
+                    else:
+                        complexity = "COMPLEX"
+                    success, msg = self.db_manager.save_recipe(
+                        record["title"], record["ingredients"], 
+                        ingredient_count, complexity
+                    )
+                    print(f"    DB: {msg}")
+            
+            return formatted_record
             
         except Exception as e:
             print(f"  ❌ Processing error: {e}")
             return None
-        
-        return None
     
     def load_json_file(self, file_path: Path) -> Union[Dict[str, Any], List[Dict[str, Any]], None]:
         """Load and parse JSON file.
@@ -279,18 +315,34 @@ def main():
         type=Path,
         help="Custom feed file path (default: tool/feed.txt)"
     )
+    parser.add_argument(
+        '--save-to-db',
+        action='store_true',
+        help="Save records to database"
+    )
+    parser.add_argument(
+        '--db-path',
+        type=Path,
+        help="Custom database path"
+    )
     
     args = parser.parse_args()
     
     processor = JSONRecordProcessor(
         feed_path=args.feed,
-        inbox_dir=args.inbox
+        inbox_dir=args.inbox,
+        save_to_db=args.save_to_db,
+        db_path=args.db_path
     )
     
     if args.file:
         processor.process_file(args.file)
     else:
         processor.process_inbox()
+    
+    # Close database if used
+    if processor.db_manager:
+        processor.db_manager.close()
 
 
 if __name__ == "__main__":
